@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+type RouteParams = {
+  params: Promise<{ width: string; height: string }>;
+};
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { width: string; height: string } }
+  { params }: RouteParams
 ) {
-  const width = parseInt(params.width, 10) || 300;
-  const height = parseInt(params.height, 10) || 300;
+  const { width: widthParam, height: heightParam } = await params;
+  const width = parseInt(widthParam, 10) || 300;
+  const height = parseInt(heightParam, 10) || 300;
 
   // Create a simple SVG placeholder
   const svg = `
