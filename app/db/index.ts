@@ -1,23 +1,10 @@
-import { drizzle } from 'drizzle-orm/node-postgres';
-import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import { Pool } from '@neondatabase/serverless';
 import * as schema from './schema';
 
 const connectionString = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_D2At3HiQSTNV@ep-curly-brook-ad0u313x-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
 
-const pool = new Pool({
-  connectionString,
-  ssl: {
-    rejectUnauthorized: true,
-  },
-  connectionTimeoutMillis: 60000,
-  idleTimeoutMillis: 120000,
-  max: 5,
-  statement_timeout: 60000,
-});
-
-pool.on('error', (err) => {
-  console.error('Unexpected error on idle client', err);
-});
+const pool = new Pool({ connectionString });
 
 export const db = drizzle(pool, { schema });
 
