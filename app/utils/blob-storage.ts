@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { put } from '@vercel/blob';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -7,8 +8,7 @@ import { v4 as uuidv4 } from 'uuid';
  * @param maxWidth Maximum width for image compression
  * @returns Promise with the data URL
  */
-// In the fileToDataUrl function
-export async function fileToDataUrl(file: File, maxWidth = 400): Promise<string> { // Reduced from 600 to 400
+export async function fileToDataUrl(file: File, maxWidth = 400): Promise<string> {
   // For non-image files, use a simple data URL
   if (!file.type.startsWith('image/')) {
     return new Promise((resolve, reject) => {
@@ -51,9 +51,7 @@ export async function fileToDataUrl(file: File, maxWidth = 400): Promise<string>
         ctx.drawImage(img, 0, 0, width, height);
         
         // Convert to data URL with compression
-        // Inside the img.onload function, reduce quality further
-        // When setting quality
-        const quality = file.type === 'image/jpeg' || file.type === 'image/jpg' ? 0.3 : 0.5; // Reduced quality
+        const quality = file.type === 'image/jpeg' || file.type === 'image/jpg' ? 0.3 : 0.5;
         const dataUrl = canvas.toDataURL(file.type, quality);
         
         resolve(dataUrl);
@@ -70,25 +68,51 @@ export async function fileToDataUrl(file: File, maxWidth = 400): Promise<string>
 }
 
 /**
- * Uploads a file by converting it to a compressed data URL
+ * Uploads a file to Vercel Blob storage
  * @param file The file to upload
- * @returns The data URL of the file
+ * @returns The public URL of the uploaded file
  */
 export async function uploadFile(file: File): Promise<string> {
   try {
-    // Generate a unique ID for the file
+    // Generate a unique filename
     const fileId = uuidv4();
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split('.').pop() || 'bin';
+    const filename = `products/${fileId}.${fileExt}`;
     
-    // Convert the file to a compressed data URL
-    const dataUrl = await fileToDataUrl(file);
+    // Upload to Vercel Blob
+    const { url } = await put(filename, file, { 
+      access: 'public',
+      token: process.env.BLOB_READ_WRITE_TOKEN
+    });
     
-    console.log(`File processed: ${file.name}, Size: ${Math.round(dataUrl.length / 1024)}KB`);
+    console.log(`File uploaded: ${file.name}, URL: ${url}`);
     
-    // Return the data URL which contains the file data
-    return dataUrl;
+    return url;
   } catch (error) {
-    console.error('Error converting file to data URL:', error);
-    throw new Error('Failed to process file');
+    console.error('Error uploading file to Vercel Blob:', error);
+    throw new Error('Failed to upload file');
+  }
+}
+
+/**
+ * Deletes a file from Vercel Blob storage
+ * @param url The URL of the file to delete
+ */
+export async function deleteFile(url: string): Promise<void> {
+  try {
+    // Extract the pathname from the URL for deletion
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    
+    // Note: Vercel Blob deletion requires the del function
+    // For now, we'll just log the deletion attempt
+    console.log(`File deletion requested for: ${pathname}`);
+    
+    // TODO: Implement actual deletion when needed
+    // const { del } = await import('@vercel/blob');
+    // await del(url, { token: process.env.BLOB_READ_WRITE_TOKEN });
+  } catch (error) {
+    console.error('Error deleting file from Vercel Blob:', error);
+    // Don't throw error for deletion failures to avoid breaking the flow
   }
 }

@@ -9,7 +9,7 @@ import { categories, brands } from '../../../../data/products';
 import { db } from '../../../../db';
 import { products } from '../../../../db/schema';
 import { eq } from 'drizzle-orm';
-import { uploadFile, deleteFile } from '../../../../utils/supabase/storage';
+import { uploadFile, deleteFile } from '../../../../utils/blob-storage';
 
 interface EditProductClientProps {
   productId: string;
@@ -129,8 +129,13 @@ export default function EditProductClient({ productId }: EditProductClientProps)
       let mainImageUrl = mainImagePreview || '';
       if (mainImageFile) {
         mainImageUrl = await uploadFile(mainImageFile);
+        // Delete old image if it exists
         if (currentProduct.image) {
-          try { await deleteFile(currentProduct.image); } catch (err) { console.error(err); }
+          try { 
+            await deleteFile(currentProduct.image); 
+          } catch (err) { 
+            console.error('Failed to delete old image:', err); 
+          }
         }
       }
 

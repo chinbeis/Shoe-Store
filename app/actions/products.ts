@@ -5,7 +5,6 @@ import { db, withRetry } from '../db';
 import { products as productsTable } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 // Keep supabaseAdmin import as it might be used in other parts of the file
-import { supabaseAdmin } from '../utils/supabase/server';
 
 export async function getProducts() {
   try {
